@@ -37,7 +37,10 @@ export default function Contact() {
       projectType: data.get("projectType"),
       details: data.get("details"),
       company: data.get("company"), // honeypot
-      renderedAt: mountedAt.current,
+      // Time on page, measured entirely on the CLIENT clock (a duration, not an
+      // absolute timestamp) so client/server clock skew can't falsely flag a
+      // real submission. Falls back to a large value if mount time is missing.
+      elapsedMs: mountedAt.current ? Date.now() - mountedAt.current : 60000,
     }
 
     setStatus("submitting")
@@ -122,11 +125,15 @@ export default function Contact() {
               </span>
               <h3 className="contact__success-title">Thank you — request received.</h3>
               <p className="contact__success-body">
-                We&rsquo;ll be in touch shortly. Prefer to talk now? Call{" "}
+                We&rsquo;ll be in touch shortly. Prefer to talk now?{" "}
                 <a href={business.phoneHref} className="contact__success-link">
-                  {business.phoneDisplay}
-                </a>
-                .
+                  Call
+                </a>{" "}
+                or{" "}
+                <a href={SMS_HREF} className="contact__success-link">
+                  text
+                </a>{" "}
+                {business.phoneDisplay}.
               </p>
             </div>
           ) : (
