@@ -1721,9 +1721,6 @@ ul {
 }
 
 @media (max-width: 640px) {
-  .site-header .brand__wordmark {
-    display: none;
-  }
   .field-row {
     grid-template-columns: 1fr;
   }
