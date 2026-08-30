@@ -61,8 +61,12 @@ export async function POST(request: Request) {
   }
 
   // --- Anti-spam: reject near-instant submissions (likely automated) ---
-  const renderedAt = Number(body.renderedAt)
-  if (Number.isFinite(renderedAt) && Date.now() - renderedAt < 2500) {
+  // elapsedMs is the time the visitor spent on the page, measured on the client
+  // as a single-clock duration. Using a duration (not client-vs-server absolute
+  // timestamps) makes this immune to clock skew, which previously produced false
+  // silent-successes for legitimate users whose device clock ran ahead.
+  const elapsedMs = Number(body.elapsedMs)
+  if (Number.isFinite(elapsedMs) && elapsedMs >= 0 && elapsedMs < 2500) {
     return NextResponse.json({ ok: true })
   }
 
