@@ -34,6 +34,15 @@ function escapeHtml(value: string): string {
 }
 
 export async function POST(request: Request) {
+  // TEMPORARY DIAGNOSTICS — labels only, never any submitted content, email,
+  // phone, IP, or secret value. `has_key` is a boolean presence flag, not the
+  // key. Safe to remove once the silent-return branch is identified.
+  console.log(
+    `CONTACT_DIAG: request_received node_env=${process.env.NODE_ENV} has_key=${
+      RESEND_API_KEY ? "yes" : "no"
+    }`
+  )
+
   // --- Basic per-IP rate limiting (5 requests / 10 minutes) ---
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -41,6 +50,7 @@ export async function POST(request: Request) {
     "unknown"
   const limit = rateLimit(`contact:${ip}`, { max: 5, windowMs: 10 * 60 * 1000 })
   if (!limit.ok) {
+    console.log("CONTACT_DIAG: rate_limit")
     return NextResponse.json(
       { error: "Too many requests. Please try again in a little while." },
       { status: 429 }
@@ -51,12 +61,16 @@ export async function POST(request: Request) {
   try {
     body = await request.json()
   } catch {
+    console.log("CONTACT_DIAG: invalid_json")
     return NextResponse.json({ error: "Invalid request." }, { status: 400 })
   }
 
   // --- Anti-spam: honeypot field (real users never fill this) ---
-  if (clean(body.company, 100)) {
+  const company = clean(body.company, 100)
+  if (company) {
     // Silently accept so bots don't learn they were caught. Nothing is sent.
+    // company_len is a length only — never the value.
+    console.log(`CONTACT_DIAG: honeypot_drop company_len=${company.length}`)
     return NextResponse.json({ ok: true })
   }
 
@@ -67,6 +81,8 @@ export async function POST(request: Request) {
   // silent-successes for legitimate users whose device clock ran ahead.
   const elapsedMs = Number(body.elapsedMs)
   if (Number.isFinite(elapsedMs) && elapsedMs >= 0 && elapsedMs < 2500) {
+    // elapsedMs is a duration number only — not personal data.
+    console.log(`CONTACT_DIAG: timing_drop elapsedMs=${elapsedMs}`)
     return NextResponse.json({ ok: true })
   }
 
@@ -83,6 +99,10 @@ export async function POST(request: Request) {
   if (!email || !EMAIL_RE.test(email)) fields.email = "Please enter a valid email."
   if (!details) fields.details = "Please add a few details about your project."
   if (Object.keys(fields).length > 0) {
+    // Field NAMES only (e.g. "email"), never the submitted values.
+    console.log(
+      `CONTACT_DIAG: validation_failure fields=${Object.keys(fields).join(",")}`
+    )
     return NextResponse.json(
       { error: "Please review the highlighted fields.", fields },
       { status: 422 }
@@ -122,9 +142,10 @@ export async function POST(request: Request) {
   if (!RESEND_API_KEY) {
     if (process.env.NODE_ENV !== "production") {
       // Preview mode for local design review: nothing is sent.
-      console.info("[contact] preview mode — RESEND_API_KEY unset; no email sent")
+      console.log("CONTACT_DIAG: preview_no_key")
       return NextResponse.json({ ok: true, preview: true })
     }
+    console.log("CONTACT_DIAG: not_configured")
     return NextResponse.json(
       { error: "Email delivery is not configured yet. Please call us instead." },
       { status: 503 }
@@ -132,6 +153,7 @@ export async function POST(request: Request) {
   }
 
   // --- Send via Resend; visitor's email as Reply-To ---
+  console.log("CONTACT_DIAG: before_resend")
   try {
     const resend = new Resend(RESEND_API_KEY)
     const { error } = await resend.emails.send({
@@ -143,16 +165,17 @@ export async function POST(request: Request) {
       html: htmlBody,
     })
     if (error) {
-      // Do not log submitted content — only the failure reason.
-      console.error("[contact] delivery failed:", error.message)
+      // Label + error type only — never submitted content or addresses.
+      console.log(`CONTACT_DIAG: resend_error name=${error.name ?? "unknown"}`)
       return NextResponse.json(
         { error: "We couldn't send your message. Please call us instead." },
         { status: 502 }
       )
     }
+    console.log("CONTACT_DIAG: resend_success")
     return NextResponse.json({ ok: true })
   } catch {
-    console.error("[contact] unexpected error while sending")
+    console.log("CONTACT_DIAG: resend_exception")
     return NextResponse.json(
       { error: "Something went wrong. Please try again or call us." },
       { status: 500 }
