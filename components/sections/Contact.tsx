@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState } from "react"
 import Eyebrow from "@/components/ui/Eyebrow"
+import Icon from "@/components/ui/Icon"
 import { business, contact, projectTypes } from "@/lib/content"
+
+// Pre-filled SMS to Emil (standard "?body=" query form). The visitor must still
+// press Send in their Messages app — the website never sends anything itself.
+const SMS_HREF = `sms:+19252124048?body=${encodeURIComponent(
+  "Hi Emil, I found Emil's Renovations online and would like to discuss a renovation project."
+)}`
 
 type Status = "idle" | "submitting" | "success" | "error"
 type FieldErrors = Partial<Record<"name" | "phone" | "email" | "details", string>>
@@ -88,6 +95,23 @@ export default function Contact() {
               <dd>{business.license}</dd>
             </div>
           </dl>
+
+          <div className="contact__text-option">
+            <h3 className="contact__text-title">Prefer to text?</h3>
+            <p className="contact__text-body">
+              Text Emil directly at{" "}
+              <span className="contact__text-number">{business.phoneDisplay}</span>{" "}
+              and tell us a little about your project.
+            </p>
+            <a
+              href={SMS_HREF}
+              className="btn btn--ghost contact__text-cta"
+              aria-label={`Text Emil at ${business.phoneDisplay}`}
+            >
+              <Icon name="communication" className="contact__text-icon" />
+              <span>Text Emil</span>
+            </a>
+          </div>
         </div>
 
         <div className="contact__panel">

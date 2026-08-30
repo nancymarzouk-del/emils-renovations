@@ -1431,6 +1431,44 @@ ul {
   color: var(--gold);
 }
 
+/* Secondary "text Emil" option — restrained, below the primary form CTA. */
+.contact__text-option {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--hairline);
+}
+
+.contact__text-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  color: var(--ivory);
+  font-size: var(--fs-h4);
+  line-height: 1.2;
+}
+
+.contact__text-body {
+  margin-top: 0.5rem;
+  max-width: 26rem;
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--ivory-dim);
+}
+
+.contact__text-number {
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.contact__text-cta {
+  gap: 0.55rem;
+  margin-top: 1.1rem;
+}
+
+.contact__text-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .mobile-menu__call {
   margin-top: 1.5rem;
   font-family: var(--font-serif);
