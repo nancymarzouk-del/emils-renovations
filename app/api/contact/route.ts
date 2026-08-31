@@ -66,11 +66,13 @@ export async function POST(request: Request) {
   }
 
   // --- Anti-spam: honeypot field (real users never fill this) ---
-  const company = clean(body.company, 100)
-  if (company) {
+  // Field name is non-semantic ("contact_website") so browsers/password managers
+  // don't autofill it for legitimate visitors.
+  const honeypot = clean(body.contact_website, 100)
+  if (honeypot) {
     // Silently accept so bots don't learn they were caught. Nothing is sent.
-    // company_len is a length only — never the value.
-    console.log(`CONTACT_DIAG: honeypot_drop company_len=${company.length}`)
+    // honeypot_len is a length only — never the value.
+    console.log(`CONTACT_DIAG: honeypot_drop honeypot_len=${honeypot.length}`)
     return NextResponse.json({ ok: true })
   }
 

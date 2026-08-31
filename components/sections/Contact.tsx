@@ -36,7 +36,9 @@ export default function Contact() {
       email: data.get("email"),
       projectType: data.get("projectType"),
       details: data.get("details"),
-      company: data.get("company"), // honeypot
+      // Honeypot — neutral, non-semantic field name so browsers/password
+      // managers won't autofill it (real users never see or fill it).
+      contact_website: data.get("contact_website"),
       // Time on page, measured entirely on the CLIENT clock (a duration, not an
       // absolute timestamp) so client/server clock skew can't falsely flag a
       // real submission. Falls back to a large value if mount time is missing.
@@ -144,15 +146,19 @@ export default function Contact() {
                 </p>
               )}
 
-              {/* Honeypot: hidden from users, catches bots. */}
+              {/* Honeypot: hidden from users, catches bots. The field name is
+                  deliberately non-semantic so browsers/password managers don't
+                  autofill it for real visitors. */}
               <div className="contact__hp" aria-hidden="true">
-                <label htmlFor="company">Company</label>
+                <label htmlFor="contact_website">Website</label>
                 <input
-                  id="company"
-                  name="company"
+                  id="contact_website"
+                  name="contact_website"
                   type="text"
                   tabIndex={-1}
                   autoComplete="off"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
                 />
               </div>
 
